@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@import "tailwindcss";
+
+.disabled-button {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.disabled-button:hover {
+  background-color: #3b82f6; /* same as bg-blue-500 */
+}

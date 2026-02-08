@@ -1,0 +1,56 @@
+services:
+
+  mysqldb:
+    image: mysql:8.0.38
+    ports:
+      - "3307:3306"
+    networks:
+      - test-network
+    volumes:
+      - st-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: simpletask
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  serverapp:
+    build:
+      context: ./st-server
+      dockerfile: Dockerfile
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    ports:
+      - "8090:8080"
+    networks:
+      - test-network
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/simpletask?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+
+  clientapp:
+    build:
+      context: ./st-client
+      dockerfile: Dockerfile
+    depends_on:
+      - serverapp
+    ports:
+      - "5174:80"
+    networks:
+      - test-network
+
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  st-data:
